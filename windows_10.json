@@ -1,0 +1,146 @@
+{
+  "builders": [
+    {
+      "type": "vmware-iso",
+      "iso_url": "{{user `iso_url`}}",
+      "iso_checksum": "{{user `iso_checksum`}}",
+      "headless": false,
+      "boot_wait": "2m",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "ssh_wait_timeout": "2h",
+      "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "guest_os_type": "windows8srv-64",
+      "tools_upload_flavor": "windows",
+      "disk_size": 61440,
+      "vnc_port_min": 5900,
+      "vnc_port_max": 5980,
+      "floppy_files": [
+        "{{user `autounattend`}}",
+        "./scripts/fixnetwork.ps1",
+        "./scripts/microsoft-updates.bat",
+        "./scripts/win-updates.ps1",
+        "./scripts/openssh.ps1"
+      ],
+      "vmx_data": {
+        "RemoteDisplay.vnc.enabled": "false",
+        "RemoteDisplay.vnc.port": "5900",
+        "memsize": "3072",
+        "numvcpus": "1",
+        "scsi0.virtualDev": "lsisas1068"
+      }
+    },
+    {
+      "type": "virtualbox-iso",
+      "iso_url": "{{user `iso_url`}}",
+      "iso_checksum": "{{user `iso_checksum`}}",
+      "headless": false,
+      "boot_wait": "2m",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "ssh_wait_timeout": "8h",
+      "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "guest_os_type": "Windows81_64",
+      "disk_size": 61440,
+      "floppy_files": [
+        "{{user `autounattend`}}",
+        "./scripts/fixnetwork.ps1",
+        "./scripts/microsoft-updates.bat",
+        "./scripts/win-updates.ps1",
+        "./scripts/openssh.ps1",
+        "./scripts/oracle-cert.cer",
+        "./scripts/install-chocolatey.ps1",
+        "./scripts/install_programs.ps1",
+        "./scripts/installOfficeBusRet64.xml",
+        "./scripts/install-office.ps1",
+        "./scripts/install-xshell.ps1"
+      ],
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "3072"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "1"
+        ]
+      ]
+    },
+    {
+      "type": "parallels-iso",
+      "iso_url": "{{user `iso_url`}}",
+      "iso_checksum": "{{user `iso_checksum`}}",
+      "boot_wait": "2m",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "ssh_wait_timeout": "2h",
+      "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "guest_os_type": "win-10",
+      "parallels_tools_flavor": "win",
+      "disk_size": 61440,
+      "floppy_files": [
+        "{{user `autounattend`}}",
+        "./scripts/fixnetwork.ps1",
+        "./scripts/microsoft-updates.bat",
+        "./scripts/win-updates.ps1",
+        "./scripts/openssh.ps1",
+        "./scripts/oracle-cert.cer"
+      ],
+      "prlctl": [
+        [
+          "set", "{{.Name}}",
+          "--memsize", "2048"
+        ],
+        [
+          "set", "{{.Name}}",
+          "--cpus", "2"
+        ],
+        [
+          "set", "{{.Name}}",
+          "--winsystray-in-macmenu", "off"
+        ],
+        [
+          "set", "{{.Name}}",
+          "--startup-view", "window"
+        ],
+        [
+          "set", "{{.Name}}",
+          "--efi-boot", "off"
+        ]
+      ]
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "remote_path": "/tmp/script.bat",
+      "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
+      "scripts": [
+        "./scripts/vm-guest-tools.bat",
+        "./scripts/vagrant-ssh.bat",
+        "./scripts/disable-auto-logon.bat",
+        "./scripts/enable-rdp.bat",
+        "./scripts/install-programs.bat",
+        "./scripts/compile-dotnet-assemblies.bat",
+        "./scripts/compact.bat"
+      ]
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "vagrant",
+      "keep_input_artifact": false,
+      "output": "windows_10_{{.Provider}}.box",
+      "vagrantfile_template": "vagrantfile-windows_10.template"
+    }
+  ],
+  "variables": {
+    "iso_url": "ISO/en-us_windows_10_enterprise_ltsc_2021_x64_dvd_d289cf96.iso",
+    "iso_checksum": "sha1:2fb2897373c4f71b06f4490943b3d564b0f0fd6d",
+    "autounattend": "./answer_files/10/Autounattend.xml"
+  }
+}

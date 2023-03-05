@@ -1,0 +1,1 @@
+Start-Process "choco" "install git.install GoogleChrome -y"
